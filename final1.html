@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🎉 Happy Birthday Ilyas Roy</title>
+<style>
+    :root {
+      --bg1: #ff9a9e;
+      --bg2: #fad0c4;
+    }
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(120deg, var(--bg1), var(--bg2));
+        overflow: hidden;
+        color: white;
+        min-height: 100vh;
+    }
+
+    /* UI container */
+    .ui {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; /* top-aligned */
+        min-height: 100vh;
+        text-align: center;
+        padding-top: 120px; /* space from top */
+    }
+
+    h1 {
+        font-size: 6em;
+        margin: 0;
+        text-shadow: 0 0 20px white;
+        animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+        0% { text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff; }
+        50% { text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff; }
+        100% { text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00; }
+    }
+
+    #subtitle {
+        font-size: 2.4em;
+        font-style: italic;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+        margin-top: 20px;
+    }
+
+    #date {
+        font-size: 4em;
+        opacity: 0;
+        transition: opacity 0.8s ease;
+        margin-top: 10px;
+    }
+
+    #countdown-label {
+        font-size: 7em;
+        margin-top: 20px;
+        opacity: 1;
+    }
+
+    #countdown {
+        font-size: 4em;
+        margin-top: 5px;
+    }
+
+    /* Balloons */
+    #balloon-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 3;
+    }
+
+    .balloon {
+        position: absolute;
+        bottom: -150px;
+        width: 50px;
+        height: 70px;
+        border-radius: 50%;
+        background: red;
+        animation: rise 6s linear forwards;
+        filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+    }
+
+    @keyframes rise {
+        to { transform: translateY(-110vh); }
+    }
+
+    /* Canvases */
+    canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 1;
+    }
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+<canvas id="fireworks"></canvas>
+<div id="balloon-container"></div>
+
+<div id="ui" class="ui">
+  <h1 id="title"></h1>
+  <div id="subtitle"></div>
+  <div id="date">14 August 2025</div>
+  <div id="countdown-label">Countdown</div>
+  <div id="countdown"></div>
+</div>
+
+<script>
+    // ===== Countdown =====
+    let demoHour = 23, demoMinute = 59, demoSecond = 57;
+
+    const titleEl = document.getElementById("title");
+    const subtitleEl = document.getElementById("subtitle");
+    const dateEl = document.getElementById("date");
+    const countdownEl = document.getElementById("countdown");
+    const countdownLabel = document.getElementById("countdown-label");
+
+    function updateCountdown() {
+        const timeStr = `${String(demoHour).padStart(2, "0")}:${String(demoMinute).padStart(2, "0")}:${String(demoSecond).padStart(2, "0")}`;
+        countdownEl.textContent = timeStr;
+
+        if (demoHour === 0 && demoMinute === 0 && demoSecond === 0) {
+            launchBirthday();
+        } else {
+            demoSecond++;
+            if (demoSecond === 60) { demoSecond = 0; demoMinute++; }
+            if (demoMinute === 60) { demoMinute = 0; demoHour++; }
+            if (demoHour === 24) { demoHour = 0; }
+            setTimeout(updateCountdown, 1000);
+        }
+    }
+
+    // ===== Celebration =====
+    const CELEBRATION_MS = 25000;
+    let confettiActive = false;
+    let fireworksAnimating = false;
+    let fwLaunchInterval = null;
+
+    function launchBirthday() {
+        countdownEl.style.display = "none";
+        countdownLabel.style.display = "none";
+        titleEl.textContent = "🎉 Happy Birthday Ilyas Roy 🎉";
+        titleEl.style.opacity = 1;
+        dateEl.style.opacity = 1;
+        subtitleEl.textContent = "Wishing you endless joy, health, and success on your special day!";
+        subtitleEl.style.opacity = 1;
+        subtitleEl.style.transform = "translateY(0)";
+
+        confettiActive = true; popConfetti();
+        spawnBalloonsContinuously(25);
+        launchFireworksContinuously(25);
+        playSong();
+
+        setTimeout(() => {
+            if (fwLaunchInterval) clearInterval(fwLaunchInterval);
+            fireworksAnimating = false;
+            confettiActive = false;
+            titleEl.style.transition = 'opacity 0.8s ease';
+            dateEl.style.transition = 'opacity 0.8s ease';
+            subtitleEl.style.opacity = 0;
+            subtitleEl.style.transform = "translateY(10px)";
+            titleEl.style.opacity = 0;
+            dateEl.style.opacity = 0;
+        }, CELEBRATION_MS);
+    }
+
+    // 🎈 Balloons
+    function spawnBalloonsContinuously(durationSec) {
+        let elapsed = 0;
+        const balloonInterval = setInterval(() => {
+            spawnBalloons(8);
+            if (++elapsed >= durationSec) clearInterval(balloonInterval);
+        }, 1000);
+    }
+
+    function spawnBalloons(count = 15) {
+        const container = document.getElementById("balloon-container");
+        for (let i = 0; i < count; i++) {
+            const balloon = document.createElement("div");
+            balloon.className = "balloon";
+            balloon.style.left = Math.random() * 100 + "vw";
+            balloon.style.background = `hsl(${Math.random()*360},70%,60%)`;
+            balloon.style.animationDuration = 5 + Math.random()*3 + "s";
+            container.appendChild(balloon);
+            setTimeout(() => balloon.remove(), 9000);
+        }
+    }
+
+    // 🎊 Confetti
+    const confettiCanvas = document.getElementById("confetti");
+    const confettiCtx = confettiCanvas.getContext("2d");
+    let confettiPieces = [];
+
+    function resizeConfetti() {
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeConfetti);
+    resizeConfetti();
+
+    function popConfetti() {
+        for (let i = 0; i < 350; i++) {
+            confettiPieces.push({
+                x: Math.random() * confettiCanvas.width,
+                y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+                r: 4 + Math.random() * 6,
+                c: `hsl(${Math.random()*360}, 100%, 50%)`,
+                s: Math.random() * 3 + 2
+            });
+        }
+        if (confettiActive) requestAnimationFrame(drawConfetti);
+    }
+
+    function drawConfetti() {
+        if (!confettiActive) return;
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        confettiPieces.forEach(p => {
+            confettiCtx.fillStyle = p.c;
+            confettiCtx.beginPath();
+            confettiCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            confettiCtx.fill();
+            p.y += p.s;
+            if (p.y > confettiCanvas.height) p.y = -10;
+        });
+        requestAnimationFrame(drawConfetti);
+    }
+
+    // 🎆 Fireworks
+    const fwCanvas = document.getElementById("fireworks");
+    const fwCtx = fwCanvas.getContext("2d");
+
+    function resizeFW() {
+        fwCanvas.width = window.innerWidth;
+        fwCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeFW);
+    resizeFW();
+
+    let particles = [];
+
+    function launchSingleFirework() {
+        const x = Math.random() * fwCanvas.width;
+        const y = Math.random() * fwCanvas.height / 2;
+        for (let j = 0; j < 50; j++) {
+            particles.push({
+                x, y,
+                vx: Math.cos(j*Math.PI/25) * (Math.random()*4+2),
+                vy: Math.sin(j*Math.PI/25) * (Math.random()*4+2),
+                life: 100,
+                color: `hsl(${Math.random()*360},100%,50%)`
+            });
+        }
+    }
+
+    function launchFireworksContinuously(durationSec) {
+        fireworksAnimating = true;
+        let elapsed = 0;
+        fwLaunchInterval = setInterval(() => {
+            launchSingleFirework();
+            if (++elapsed >= durationSec) {
+                clearInterval(fwLaunchInterval);
+            }
+        }, 1000);
+        animateFireworks();
+    }
+
+    function animateFireworks() {
+        if (!fireworksAnimating && particles.length === 0) return;
+        fwCtx.fillStyle = "rgba(0,0,0,0.2)";
+        fwCtx.fillRect(0, 0, fwCanvas.width, fwCanvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            fwCtx.fillStyle = p.color;
+            fwCtx.beginPath();
+            fwCtx.arc(p.x, p.y, 2, 0, Math.PI*2);
+            fwCtx.fill();
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.02;
+            p.life--;
+            if (p.life <= 0) particles.splice(i, 1);
+        }
+        requestAnimationFrame(animateFireworks);
+    }
+
+    // 🎵 Song
+    function playSong() {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [
+            [392,350],[392,350],[440,700],[392,700],[523,700],[494,1400],
+            [392,350],[392,350],[440,700],[392,700],[587,700],[523,1400],
+            [392,350],[392,350],[784,700],[659,700],[523,700],[494,700],[440,1400],
+            [698,350],[698,350],[659,700],[523,700],[587,700],[523,1400]
+        ];
+        let t = ctx.currentTime + 0.1;
+        notes.forEach(([f, d]) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.frequency.value = f;
+            o.type = "sine";
+            o.connect(g);
+            g.connect(ctx.destination);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.3, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + d/1000 - 0.02);
+            o.start(t);
+            o.stop(t + d/1000);
+            t += d/1000 + 0.05;
+        });
+    }
+
+    // 🚀 Start countdown
+    updateCountdown();
+</script>
+
+</body>
+</html>
